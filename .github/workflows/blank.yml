@@ -12,17 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Prose Linting Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y proselint write-good
-
-      - name: Run Proselint
-        id: proselint
-        run: |
-          output=$(proselint $(find . -name "*.md"))
-          echo "::set-output name=output::$output"
-        continue-on-error: true
+      - name: Install write-good
+        run: npm install write-good
 
       - name: Run write-good
         id: write-good
@@ -31,18 +22,6 @@ jobs:
           echo "::set-output name=output::$output"
         continue-on-error: true
 
-      - name: Post Proselint Comment
-        if: steps.proselint.outcome != 'skipped' && steps.proselint.output != ''
-        uses: mshick/add-pr-comment@v2
-        with:
-          message: |
-            Proselint results:
-            ```
-            ${{ steps.proselint.output }}
-            ```
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          allow-repeats: false
-
       - name: Post write-good Comment
         if: steps.write-good.outcome != 'skipped' && steps.write-good.output != ''
         uses: mshick/add-pr-comment@v2
@@ -50,5 +29,8 @@ jobs:
           message: |
             write-good results:
             ```
-            
+            ${{ steps.write-good.output }}
+            ```
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          allow-repeats: false
 
