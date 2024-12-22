@@ -1,19 +1,56 @@
-# This is a basic workflow to help you get started with Actions
+name: Prose Linting
 
-name: CI
-...
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-      # run shellcheck
-      - name: ShellCheck
-        uses: ludeeus/action-shellcheck@1.1.0
-      - name: Post comment
-        uses: mshick/add-pr-comment@v1
-        if: $
+      - uses: actions/checkout@v3
+
+      - name: Install Prose Linting Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y proselint write-good
+
+      - name: Run Proselint
+        id: proselint
+        run: |
+          output=$(proselint $(find . -name "*.md"))
+          echo "::set-output name=output::$output"
+        continue-on-error: true  # Allow workflow to continue even if proselint finds errors
+
+      - name: Run write-good
+        id: write-good
+        run: |
+          output=$(write-good $(find . -name "*.md"))
+          echo "::set-output name=output::$output"
+        continue-on-error: true # Allow workflow to continue even if write-good finds errors
+
+      - name: Post Proselint Comment
+        if: steps.proselint.outcome != 'skipped' && steps.proselint.output != ''
+        uses: mshick/add-pr-comment@v2
         with:
-            message: |
-            $
-            repo-token: $
-            repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
-            allow-repeats: false # This is the default
+          message: |
+            Proselint results:
+            ```
+            ${{ steps.proselint.output }}
+            ```
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          allow-repeats: false
+
+      - name: Post write-good Comment
+        if: steps.write-good.outcome != 'skipped' && steps.write-good.output != ''
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            write-good results:
+            ```
+            ${{ steps.write-good.output }}
+            ```
+          repo-token: ${{ secrets
+
