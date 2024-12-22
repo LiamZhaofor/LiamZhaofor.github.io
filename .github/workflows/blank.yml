@@ -22,14 +22,14 @@ jobs:
         run: |
           output=$(proselint $(find . -name "*.md"))
           echo "::set-output name=output::$output"
-        continue-on-error: true  # Allow workflow to continue even if proselint finds errors
+        continue-on-error: true
 
       - name: Run write-good
         id: write-good
         run: |
           output=$(write-good $(find . -name "*.md"))
           echo "::set-output name=output::$output"
-        continue-on-error: true # Allow workflow to continue even if write-good finds errors
+        continue-on-error: true
 
       - name: Post Proselint Comment
         if: steps.proselint.outcome != 'skipped' && steps.proselint.output != ''
@@ -50,7 +50,5 @@ jobs:
           message: |
             write-good results:
             ```
-            ${{ steps.write-good.output }}
-            ```
-          repo-token: ${{ secrets
+            
 
